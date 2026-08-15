@@ -2,34 +2,39 @@ import { useMutation } from "@tanstack/react-query";
 import { FormEvent, useState } from "react";
 
 import { chatApi } from "../../api/chat";
+import type { ProposedAction } from "../../api/chat";
 import { ApiError } from "../../api/client";
+import ProposalCard from "./ProposalCard";
 
-interface Message {
-  role: "user" | "assistant" | "error";
-  text: string;
-}
+type ChatEntry =
+  | { kind: "text"; role: "user" | "assistant" | "error"; text: string }
+  | { kind: "proposal"; proposal: ProposedAction };
 
 // Deliberately stateless/client-only history (no session persistence) --
-// this is the lightweight "ask about synced content" widget, not the
-// sandboxed per-repo persona session flow scaffolded at /sessions (that one
-// needs InvocationSession/ChatMessage + a real sandbox_engine build).
+// this is the lightweight "ask about synced content + propose Jira changes"
+// widget, not the sandboxed per-repo persona session flow scaffolded at
+// /sessions (that one needs InvocationSession/ChatMessage + a real
+// sandbox_engine build).
 export default function AskWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [entries, setEntries] = useState<ChatEntry[]>([]);
 
   const ask = useMutation({
     mutationFn: (message: string) => chatApi.ask(message),
-    onSuccess: (res) => setMessages((m) => [...m, { role: "assistant", text: res.reply }]),
+    onSuccess: (res) =>
+      setEntries((e) => [
+        ...e,
+        { kind: "text", role: "assistant", text: res.reply },
+        ...res.proposed_actions.map((p): ChatEntry => ({ kind: "proposal", proposal: p })),
+      ]),
     onError: (err) =>
-      setMessages((m) => [
-        ...m,
+      setEntries((e) => [
+        ...e,
         {
+          kind: "text",
           role: "error",
-          text:
-            err instanceof ApiError
-              ? err.message
-              : "Something went wrong asking that.",
+          text: err instanceof ApiError ? err.message : "Something went wrong asking that.",
         },
       ]),
   });
@@ -38,7 +43,7 @@ export default function AskWidget() {
     e.preventDefault();
     const message = input.trim();
     if (!message || ask.isPending) return;
-    setMessages((m) => [...m, { role: "user", text: message }]);
+    setEntries((prev) => [...prev, { kind: "text", role: "user", text: message }]);
     setInput("");
     ask.mutate(message);
   }
@@ -58,26 +63,31 @@ export default function AskWidget() {
             </button>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-3">
-            {messages.length === 0 && (
+            {entries.length === 0 && (
               <p className="text-xs text-slate-400">
-                Ask about any synced persona, skill, command, or your team's knowledge base --
-                e.g. "what does the pr-review skill check for?"
+                Ask about any synced persona, skill, command, or your team's knowledge base, or
+                ask it to search/create/update Jira issues -- e.g. "what's open in ENG right now?"
+                Jira writes always need your explicit confirmation.
               </p>
             )}
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`animate-fade-in rounded-lg px-3 py-2 text-sm ${
-                  m.role === "user"
-                    ? "ml-6 bg-slate-900 text-white"
-                    : m.role === "error"
-                      ? "bg-red-50 text-red-700"
-                      : "mr-6 bg-slate-100 text-slate-800"
-                }`}
-              >
-                {m.text}
-              </div>
-            ))}
+            {entries.map((entry, i) =>
+              entry.kind === "proposal" ? (
+                <ProposalCard key={i} proposal={entry.proposal} />
+              ) : (
+                <div
+                  key={i}
+                  className={`animate-fade-in rounded-lg px-3 py-2 text-sm ${
+                    entry.role === "user"
+                      ? "ml-6 bg-slate-900 text-white"
+                      : entry.role === "error"
+                        ? "bg-red-50 text-red-700"
+                        : "mr-6 bg-slate-100 text-slate-800"
+                  }`}
+                >
+                  {entry.text}
+                </div>
+              )
+            )}
             {ask.isPending && (
               <div className="mr-6 flex gap-1 rounded-lg bg-slate-100 px-3 py-2">
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />

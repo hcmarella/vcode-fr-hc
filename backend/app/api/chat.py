@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,8 +15,18 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
 
 
+class ProposedAction(BaseModel):
+    id: uuid.UUID
+    action_type: str
+    preview_text: str
+
+
 class ChatResponse(BaseModel):
     reply: str
+    # Non-empty only when the model staged a Jira create/update this turn --
+    # the frontend renders these as Confirm/Reject cards. Nothing in them has
+    # been written to Jira yet.
+    proposed_actions: list[ProposedAction] = []
 
 
 @router.post("", response_model=ChatResponse)
@@ -24,9 +36,15 @@ async def chat(
     user: User = Depends(get_current_user),
 ) -> ChatResponse:
     try:
-        reply = await ask(db, user.team, body.message)
+        reply, proposals = await ask(db, user, body.message)
     except ChatNotConfigured:
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "Chat isn't configured (missing API key)"
         ) from None
-    return ChatResponse(reply=reply)
+    return ChatResponse(
+        reply=reply,
+        proposed_actions=[
+            ProposedAction(id=p.id, action_type=p.action_type.value, preview_text=p.preview_text)
+            for p in proposals
+        ],
+    )

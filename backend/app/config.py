@@ -41,6 +41,16 @@ class Settings(BaseSettings):
 
     pexels_api_key: str = ""
 
+    # --- Jira integration (chat tool-use + dedicated endpoints) ---
+    # API token auth: create one at id.atlassian.com/manage-profile/security/api-tokens.
+    # Search executes immediately (read-only); create/update only ever stage a
+    # JiraActionRequest for a human to confirm in the UI -- see
+    # app/chat_engine/service.py and app/api/jira_actions.py.
+    jira_base_url: str = ""  # e.g. "https://your-domain.atlassian.net"
+    jira_email: str = ""
+    jira_api_token: str = ""
+    jira_default_project_key: str = ""
+
     docker_host: str | None = None
     sandbox_image: str = "vcode-fr-hc-sandbox:latest"
     sandbox_egress_network: str = "sandbox-egress"

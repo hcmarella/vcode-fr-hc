@@ -7,6 +7,7 @@ import AdminSyncPage from "./pages/AdminSyncPage";
 import CommandDetailPage from "./pages/CommandDetailPage";
 import CommandsPage from "./pages/CommandsPage";
 import HomePage from "./pages/HomePage";
+import JiraPage from "./pages/JiraPage";
 import KnowledgeDetailPage from "./pages/KnowledgeDetailPage";
 import KnowledgePage from "./pages/KnowledgePage";
 import LoginPage from "./pages/LoginPage";
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/commands/:slug" element={<CommandDetailPage />} />
           <Route path="/knowledge" element={<KnowledgePage />} />
           <Route path="/knowledge/:id" element={<KnowledgeDetailPage />} />
+          <Route path="/jira" element={<JiraPage />} />
           <Route path="/admin/sync" element={<AdminSyncPage />} />
           <Route path="/sessions" element={<SessionsListPage />} />
           <Route path="/sessions/new" element={<NewSessionPage />} />

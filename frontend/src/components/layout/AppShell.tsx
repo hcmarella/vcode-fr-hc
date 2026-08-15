@@ -10,6 +10,7 @@ const navItems = [
   { to: "/skills", label: "Skills" },
   { to: "/commands", label: "Commands" },
   { to: "/knowledge", label: "Knowledge" },
+  { to: "/jira", label: "Jira" },
   { to: "/sessions", label: "Sessions" },
 ];
 

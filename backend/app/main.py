@@ -7,6 +7,7 @@ from app.api import (
     chat,
     commands,
     images,
+    jira_actions,
     knowledge,
     personas,
     skills,
@@ -35,6 +36,7 @@ app.include_router(sync.router)
 app.include_router(sync_status.router)
 app.include_router(chat.router)
 app.include_router(images.router)
+app.include_router(jira_actions.router)
 app.include_router(webhooks.router)
 
 
