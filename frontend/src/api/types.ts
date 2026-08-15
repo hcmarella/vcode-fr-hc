@@ -1,5 +1,5 @@
 export type Team = "engineering" | "product" | "qa" | "docs";
-export type Role = "member" | "admin";
+export type Role = "developer" | "business" | "manager" | "admin";
 export type ContentStatus = "active" | "stale";
 export type MemoryType = "user" | "feedback" | "project" | "reference";
 export type SyncRunStatus = "pending" | "running" | "success" | "failed";

@@ -18,7 +18,15 @@ class Team(str, enum.Enum):
 
 
 class Role(str, enum.Enum):
-    MEMBER = "member"
+    # Mirrors the Developer/Business/Infra(->Manager)/Admin permission table
+    # referenced in the FORGE architecture docs -- what each role can *do*
+    # (Jira write, admin/sync tools) is enforced server-side in
+    # app/api/deps.py and app/chat_engine/service.py, not just hidden in the
+    # UI. Manager stands in for the "Infra (Phase 2)" row: a rollup/overview
+    # role rather than a hands-on one.
+    DEVELOPER = "developer"
+    BUSINESS = "business"
+    MANAGER = "manager"
     ADMIN = "admin"
 
 
@@ -29,7 +37,7 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     password_hash: Mapped[str] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     team: Mapped[Team] = mapped_column(pg_enum(Team, "team_enum"))
-    role: Mapped[Role] = mapped_column(pg_enum(Role, "role_enum"), default=Role.MEMBER)
+    role: Mapped[Role] = mapped_column(pg_enum(Role, "role_enum"), default=Role.DEVELOPER)
 
 
 class UserLimits(Base):

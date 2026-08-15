@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authApi } from "../api/auth";
 import { ApiError } from "../api/client";
-import type { Team } from "../api/types";
+import type { Role, Team } from "../api/types";
 
 export function useCurrentUser() {
   return useQuery({
@@ -31,12 +31,14 @@ export function useSignup() {
       password,
       name,
       team,
+      role,
     }: {
       email: string;
       password: string;
       name: string;
       team: Team;
-    }) => authApi.signup(email, password, name, team),
+      role: Role;
+    }) => authApi.signup(email, password, name, team, role),
     onSuccess: (user) => queryClient.setQueryData(["auth", "me"], user),
   });
 }

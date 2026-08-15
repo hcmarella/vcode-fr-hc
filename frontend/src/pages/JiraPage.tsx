@@ -4,8 +4,11 @@ import { FormEvent, useState } from "react";
 import { ApiError } from "../api/client";
 import { jiraApi } from "../api/jira";
 import PageHeader from "../components/ui/PageHeader";
+import { useCurrentUser } from "../hooks/useAuth";
 
 export default function JiraPage() {
+  const { data: user } = useCurrentUser();
+  const canWrite = user?.role === "developer" || user?.role === "admin";
   const queryClient = useQueryClient();
   const [jql, setJql] = useState('project = ENG AND status != Done ORDER BY updated DESC');
   const [submittedJql, setSubmittedJql] = useState<string | null>(null);
@@ -37,7 +40,11 @@ export default function JiraPage() {
     <div>
       <PageHeader
         title="Jira"
-        subtitle="Search is read-only and runs immediately. Creating or updating a ticket (via the chat widget or a proposal below) always needs your confirmation before it reaches Jira."
+        subtitle={
+          canWrite
+            ? "Search is read-only and runs immediately. Creating or updating a ticket (via the chat widget or a proposal below) always needs your confirmation before it reaches Jira."
+            : "Search is read-only and runs immediately. Your role is view-only for Jira -- creating or updating tickets needs a developer or admin account."
+        }
       />
 
       <form onSubmit={handleSearch} className="flex gap-2">
@@ -95,6 +102,7 @@ export default function JiraPage() {
         </div>
       )}
 
+      {canWrite && (
       <div className="mt-8">
         <h2 className="text-lg font-medium text-slate-900">Pending approvals</h2>
         <p className="text-sm text-slate-500">
@@ -133,6 +141,7 @@ export default function JiraPage() {
           {pending.length === 0 && <p className="text-sm text-slate-400">Nothing pending.</p>}
         </div>
       </div>
+      )}
     </div>
   );
 }

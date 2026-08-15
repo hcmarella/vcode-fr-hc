@@ -10,6 +10,11 @@ class SignupRequest(BaseModel):
     password: str = Field(min_length=8)
     name: str = Field(min_length=1)
     team: Team
+    # Excludes admin deliberately -- self-signup must never be able to grant
+    # admin. Enforced again in the endpoint itself (app/api/auth.py), not
+    # just by this being the schema default; a client could still send
+    # role=admin in the request body.
+    role: Role = Role.DEVELOPER
 
 
 class LoginRequest(BaseModel):

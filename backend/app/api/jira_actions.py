@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, require_jira_write
 from app.db.models.jira import JiraActionRequest, JiraActionStatus, JiraActionType
 from app.db.models.user import User
 from app.integrations.jira_client import JiraClient, JiraNotConfigured
@@ -95,12 +95,15 @@ async def reject_action(
 async def confirm_action(
     action_id: str,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_jira_write),
 ) -> dict:
     """The only code path in this backend that actually calls
     JiraClient.create_issue/update_issue. Reached only by an explicit human
     click on a proposal this same user staged -- never by the model, never
-    automatically."""
+    automatically. Also role-gated (developer/admin only) as defense in
+    depth -- business/manager can't stage a proposal in the first place
+    (chat_engine doesn't offer them the propose_* tools), but this closes the
+    door even if a proposal somehow existed under their account."""
     action = await _get_owned_pending_action(db, action_id, user)
     action.status = JiraActionStatus.CONFIRMED
     action.decided_at = datetime.now(timezone.utc)

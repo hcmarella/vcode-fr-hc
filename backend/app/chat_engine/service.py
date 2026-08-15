@@ -28,7 +28,7 @@ from app.config import get_settings
 from app.db.models.content import ContentAgent, ContentCommand, ContentKnowledge, ContentSkill
 from app.db.models.content import ContentStatus
 from app.db.models.jira import JiraActionRequest, JiraActionStatus, JiraActionType
-from app.db.models.user import User
+from app.db.models.user import Role, User
 from app.integrations.jira_client import JiraClient, JiraNotConfigured
 
 MAX_CONTEXT_CHARS = 12_000
@@ -39,21 +39,28 @@ class ChatNotConfigured(Exception):
     pass
 
 
-JIRA_TOOLS = [
-    {
-        "name": "search_jira_issues",
-        "description": "Search Jira issues with JQL. Read-only -- executes immediately, no approval needed.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "jql": {
-                    "type": "string",
-                    "description": 'JQL query, e.g. \'project = ENG AND status = "In Progress"\'',
-                }
-            },
-            "required": ["jql"],
+SEARCH_TOOL = {
+    "name": "search_jira_issues",
+    "description": "Search Jira issues with JQL. Read-only -- executes immediately, no approval needed.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "jql": {
+                "type": "string",
+                "description": 'JQL query, e.g. \'project = ENG AND status = "In Progress"\'',
+            }
         },
+        "required": ["jql"],
     },
+}
+
+# Only offered to developer/admin roles -- business/manager are view-only for
+# Jira per the permission table this app's role model mirrors. Not exposing
+# the tool at all (rather than exposing it and rejecting the call) means the
+# model never tells a business-role user "let me create that for you" and
+# then fails -- it just doesn't have the option, same as a human without the
+# button.
+WRITE_TOOLS = [
     {
         "name": "propose_jira_create_issue",
         "description": (
@@ -92,6 +99,12 @@ JIRA_TOOLS = [
         },
     },
 ]
+
+
+def _tools_for(user: User) -> list[dict]:
+    if user.role in (Role.DEVELOPER, Role.ADMIN):
+        return [SEARCH_TOOL, *WRITE_TOOLS]
+    return [SEARCH_TOOL]
 
 
 async def _build_context(session: AsyncSession, team) -> str:
@@ -175,14 +188,24 @@ async def ask(session: AsyncSession, user: User, message: str) -> tuple[str, lis
 
     context = await _build_context(session, user.team)
     client = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    tools = _tools_for(user)
+    can_write = len(tools) > 1
 
     system = (
         "You answer questions about this team's personas, skills, commands, and shared "
-        "knowledge, and can search/create/update Jira issues via tools. Searching is "
-        "read-only and immediate. Creating or updating a Jira issue always requires a "
-        "separate human confirmation step in the UI -- your propose_* tool calls only "
-        "stage the change, they never execute it. Never tell the user something was "
-        "created or updated; say it's staged and awaiting their approval.\n\n" + context
+        "knowledge, and can search Jira issues via a tool. Searching is read-only and "
+        "immediate.\n\n"
+        + (
+            "You can also create/update Jira issues, but a separate human confirmation "
+            "step in the UI is always required -- your propose_* tool calls only stage "
+            "the change, they never execute it. Never tell the user something was "
+            "created or updated; say it's staged and awaiting their approval.\n\n"
+            if can_write
+            else "This user's role is view-only for Jira -- you have no create/update "
+            "tool available. If asked to create or change a ticket, say that requires "
+            "a developer or admin account, don't attempt a workaround.\n\n"
+        )
+        + context
     )
 
     messages: list[dict] = [{"role": "user", "content": message}]
@@ -193,7 +216,7 @@ async def ask(session: AsyncSession, user: User, message: str) -> tuple[str, lis
             model=settings.default_model,
             max_tokens=1024,
             system=system,
-            tools=JIRA_TOOLS,
+            tools=tools,
             messages=messages,
         )
 

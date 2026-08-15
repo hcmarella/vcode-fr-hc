@@ -50,12 +50,18 @@ async def signup(body: SignupRequest, response: Response, db: AsyncSession = Dep
     if existing is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
 
+    if body.role == Role.ADMIN:
+        # Belt and suspenders alongside the schema default -- a client could
+        # still send role=admin directly in the request body, so reject it
+        # here regardless of what the schema allows.
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Cannot self-assign the admin role")
+
     user = User(
         email=body.email,
         password_hash=hash_password(body.password),
         name=body.name,
         team=body.team,
-        role=Role.MEMBER,
+        role=body.role,
     )
     db.add(user)
     await db.flush()

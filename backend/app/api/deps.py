@@ -40,3 +40,14 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != Role.ADMIN:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin access required")
     return user
+
+
+async def require_jira_write(user: User = Depends(get_current_user)) -> User:
+    """Gate for anything that reaches Jira's write API. Business/Manager are
+    view-only for Jira per the Developer/Business/Infra/Admin permission
+    table this app's role model mirrors -- enforced here, not just hidden in
+    the UI, and also in chat_engine.service.ask() which doesn't even offer
+    the model propose_* tools for these roles."""
+    if user.role not in (Role.DEVELOPER, Role.ADMIN):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Developer or admin access required")
+    return user
