@@ -1,10 +1,103 @@
+import { useQuery } from "@tanstack/react-query";
+
+import { commandsApi, knowledgeApi, personasApi, skillsApi } from "../api/content";
+import HeroBanner from "../components/dashboard/HeroBanner";
+import SyncStatusBadge from "../components/dashboard/SyncStatusBadge";
+import StatTile from "../components/dashboard/StatTile";
+import { useCurrentUser } from "../hooks/useAuth";
+
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function HomePage() {
+  const { data: user } = useCurrentUser();
+
+  const personas = useQuery({ queryKey: ["personas"], queryFn: personasApi.list });
+  const skills = useQuery({ queryKey: ["skills"], queryFn: skillsApi.list });
+  const commands = useQuery({ queryKey: ["commands"], queryFn: commandsApi.list });
+  const knowledge = useQuery({ queryKey: ["knowledge"], queryFn: knowledgeApi.list });
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Welcome</h1>
-      <p className="mt-2 text-slate-600">
-        Browse personas, skills, commands, and team knowledge synced from vcode-w-hc.
-      </p>
+      <HeroBanner imageQuery="abstract technology network">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          {user?.team} workspace
+        </p>
+        <h1 className="mt-1 text-3xl font-semibold">
+          {greeting()}
+          {user ? `, ${user.name.split(" ")[0]}` : ""}
+        </h1>
+        <p className="mt-2 max-w-xl text-sm text-slate-300">
+          Personas, skills, commands, and team knowledge synced live from vcode-w-hc. Ask the
+          portal anything in the chat widget, or browse below.
+        </p>
+        <div className="mt-4">
+          <SyncStatusBadge />
+        </div>
+      </HeroBanner>
+
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatTile
+          label="Personas"
+          value={personas.data?.length}
+          to="/personas"
+          accent="violet"
+          delayMs={0}
+        />
+        <StatTile label="Skills" value={skills.data?.length} to="/skills" accent="sky" delayMs={75} />
+        <StatTile
+          label="Commands"
+          value={commands.data?.length}
+          to="/commands"
+          accent="amber"
+          delayMs={150}
+        />
+        <StatTile
+          label="Knowledge"
+          value={knowledge.data?.length}
+          to="/knowledge"
+          accent="emerald"
+          delayMs={225}
+        />
+      </div>
+
+      <div
+        className="mt-6 grid animate-fade-in-up gap-4 opacity-0 sm:grid-cols-2"
+        style={{ animationDelay: "300ms" }}
+      >
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="text-sm font-medium text-slate-900">Recently active personas</h2>
+          <ul className="mt-3 space-y-2">
+            {(personas.data ?? []).slice(0, 5).map((p) => (
+              <li key={p.id} className="flex items-center justify-between text-sm">
+                <span className="font-medium text-slate-700">{p.name}</span>
+                <span className="truncate pl-4 text-xs text-slate-400">{p.model}</span>
+              </li>
+            ))}
+            {personas.data?.length === 0 && (
+              <li className="text-sm text-slate-400">Nothing synced yet.</li>
+            )}
+          </ul>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="text-sm font-medium text-slate-900">Available skills</h2>
+          <ul className="mt-3 space-y-2">
+            {(skills.data ?? []).slice(0, 5).map((s) => (
+              <li key={s.id} className="text-sm">
+                <span className="font-medium text-slate-700">{s.name}</span>
+                <p className="truncate text-xs text-slate-400">{s.description}</p>
+              </li>
+            ))}
+            {skills.data?.length === 0 && (
+              <li className="text-sm text-slate-400">Nothing synced yet.</li>
+            )}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import (
     about,
     auth,
+    chat,
     commands,
+    images,
     knowledge,
     personas,
     skills,
@@ -31,6 +33,8 @@ app.include_router(knowledge.router)
 app.include_router(about.router)
 app.include_router(sync.router)
 app.include_router(sync_status.router)
+app.include_router(chat.router)
+app.include_router(images.router)
 app.include_router(webhooks.router)
 
 

@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 
 import { useCurrentUser, useLogout } from "../../hooks/useAuth";
+import AskWidget from "../chat/AskWidget";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -18,9 +19,14 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
-          <span className="text-lg font-semibold">vcode-fr-hc</span>
+          <span className="flex items-center gap-2 text-lg font-semibold">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+              P
+            </span>
+            portal
+          </span>
           <nav className="flex flex-1 gap-4 text-sm">
             {navItems.map((item) => (
               <NavLink
@@ -63,6 +69,7 @@ export default function AppShell() {
       <main className="mx-auto max-w-6xl px-6 py-8">
         <Outlet />
       </main>
+      <AskWidget />
     </div>
   );
 }
