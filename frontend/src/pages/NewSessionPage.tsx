@@ -1,10 +1,11 @@
+import EmptyState from "../components/ui/EmptyState";
+import PageHeader from "../components/ui/PageHeader";
+
 export default function NewSessionPage() {
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Start a session</h1>
-      <p className="mt-2 text-sm text-slate-500">
-        Persona picker + git repo URL form lands in Phase 4.
-      </p>
+      <PageHeader title="Start a session" subtitle="Persona picker + git repo URL form." />
+      <EmptyState message="Not built yet -- see /sessions for why this is a separate, larger effort." />
     </div>
   );
 }

@@ -1,35 +1,51 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 
 import { commandsApi } from "../api/content";
+import Badge from "../components/ui/Badge";
+import CardGridSkeleton from "../components/ui/CardGridSkeleton";
+import EmptyState from "../components/ui/EmptyState";
+import EntityCard from "../components/ui/EntityCard";
+import ErrorState from "../components/ui/ErrorState";
+import PageHeader from "../components/ui/PageHeader";
+import SearchInput from "../components/ui/SearchInput";
 
 export default function CommandsPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ["commands"], queryFn: commandsApi.list });
+  const [query, setQuery] = useState("");
 
-  if (isLoading) return <p className="text-slate-500">Loading…</p>;
-  if (error) return <p className="text-red-600">Failed to load commands.</p>;
+  const filtered = data?.filter(
+    (c) =>
+      c.slug.toLowerCase().includes(query.toLowerCase()) ||
+      c.description.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Commands</h1>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {data?.map((command) => (
-          <Link
-            key={command.id}
-            to={`/commands/${command.slug}`}
-            className="rounded border border-slate-200 bg-white p-4 hover:border-slate-400"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">/{command.slug}</span>
-              {command.status === "stale" && (
-                <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800">stale</span>
-              )}
+      <PageHeader
+        title="Commands"
+        subtitle={data ? `${data.length} synced from vcode-w-hc` : undefined}
+      />
+      <div className="mb-4 max-w-sm">
+        <SearchInput value={query} onChange={setQuery} placeholder="Search commands…" />
+      </div>
+
+      {isLoading && <CardGridSkeleton />}
+      {error && <ErrorState message="Failed to load commands." />}
+      {filtered && filtered.length === 0 && <EmptyState message="No commands match that search." />}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {filtered?.map((command, i) => (
+          <EntityCard key={command.id} to={`/commands/${command.slug}`} accent="amber" delayMs={i * 40}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono font-medium text-slate-900">/{command.slug}</span>
+              {command.status === "stale" && <Badge tone="amber">stale</Badge>}
             </div>
-            <p className="mt-1 text-sm text-slate-500">{command.description}</p>
+            <p className="mt-1 line-clamp-2 text-sm text-slate-500">{command.description}</p>
             {command.argument_hint && (
-              <p className="mt-1 font-mono text-xs text-slate-400">{command.argument_hint}</p>
+              <p className="mt-2 font-mono text-xs text-slate-400">{command.argument_hint}</p>
             )}
-          </Link>
+          </EntityCard>
         ))}
       </div>
     </div>

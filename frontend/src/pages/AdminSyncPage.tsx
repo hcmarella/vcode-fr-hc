@@ -3,6 +3,7 @@ import { FormEvent, useState } from "react";
 
 import { ApiError } from "../api/client";
 import { syncApi } from "../api/sync";
+import PageHeader from "../components/ui/PageHeader";
 
 export default function AdminSyncPage() {
   const queryClient = useQueryClient();
@@ -33,15 +34,21 @@ export default function AdminSyncPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Sync administration</h1>
+      <PageHeader
+        title="Sync administration"
+        subtitle="Trigger a manual sync, or review webhook-triggered runs and flagged content mismatches."
+      />
 
-      <form onSubmit={handleSubmit} className="mt-4 flex flex-wrap items-end gap-3 rounded border border-slate-200 bg-white p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
         <label className="flex flex-col gap-1 text-sm">
           Source (path or git URL)
           <input
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            className="w-80 rounded border border-slate-300 px-2 py-1"
+            className="w-80 rounded-lg border border-slate-300 px-2.5 py-1.5 outline-none focus:border-slate-500"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -49,13 +56,13 @@ export default function AdminSyncPage() {
           <input
             value={ref}
             onChange={(e) => setRef(e.target.value)}
-            className="w-32 rounded border border-slate-300 px-2 py-1"
+            className="w-32 rounded-lg border border-slate-300 px-2.5 py-1.5 outline-none focus:border-slate-500"
           />
         </label>
         <button
           type="submit"
           disabled={trigger.isPending}
-          className="rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
         >
           {trigger.isPending ? "Syncing…" : "Re-sync from GitHub"}
         </button>
@@ -67,20 +74,20 @@ export default function AdminSyncPage() {
       </form>
 
       {latestRun && (
-        <div className="mt-4 rounded border border-slate-200 bg-white p-4">
-          <h2 className="font-medium">Last run</h2>
+        <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="font-medium text-slate-900">Last run</h2>
           <p className="text-sm text-slate-500">
             {latestRun.status} ({latestRun.trigger}) ·{" "}
             {new Date(latestRun.requested_at).toLocaleString()}
           </p>
-          <pre className="mt-2 overflow-x-auto rounded bg-slate-50 p-2 text-xs">
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs">
             {JSON.stringify(latestRun.counts_json, null, 2)}
           </pre>
         </div>
       )}
 
-      <div className="mt-4 rounded border border-slate-200 bg-white p-4">
-        <h2 className="font-medium">Flagged mismatches / parse errors</h2>
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="font-medium text-slate-900">Flagged mismatches / parse errors</h2>
         {flags.data?.length ? (
           <table className="mt-2 w-full text-left text-sm">
             <thead className="text-slate-500">
@@ -105,8 +112,8 @@ export default function AdminSyncPage() {
         )}
       </div>
 
-      <div className="mt-4 rounded border border-slate-200 bg-white p-4">
-        <h2 className="font-medium">Run history</h2>
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="font-medium text-slate-900">Run history</h2>
         <table className="mt-2 w-full text-left text-sm">
           <thead className="text-slate-500">
             <tr>
