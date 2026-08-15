@@ -1,0 +1,47 @@
+# No Service -- workers don't receive inbound traffic, they pull from SQS.
+# This is the piece that scales independently of API request volume: if sync
+# backlog grows (many teams pushing at once), add worker replicas without
+# touching the API tier at all.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sync-worker
+  namespace: vcode-fr-hc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sync-worker
+  template:
+    metadata:
+      labels:
+        app: sync-worker
+    spec:
+      serviceAccountName: sync-worker
+      containers:
+        - name: sync-worker
+          image: "<ECR_BACKEND_REPO_URL>:<TAG>" # same image as backend-api -- see docker-compose.yml's `worker` service for why
+          command: ["python", "-m", "app.workers.sync_worker"]
+          envFrom:
+            - configMapRef:
+                name: portal-config
+            - secretRef:
+                name: portal-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sync-worker-pdb
+  namespace: vcode-fr-hc
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: sync-worker

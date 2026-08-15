@@ -27,6 +27,14 @@ dev = [
     "pytest-asyncio>=0.24",
     "ruff>=0.7",
 ]
+# Only needed when SYNC_QUEUE_BACKEND=sqs (EKS/prod). Kept out of base
+# dependencies so the postgres-backend (default/local) image stays lean.
+aws = [
+    "boto3>=1.35",
+]
+prod = [
+    "gunicorn>=23.0",
+]
 
 [build-system]
 requires = ["setuptools>=68"]

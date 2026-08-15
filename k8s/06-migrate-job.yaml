@@ -1,0 +1,28 @@
+# Run once per deploy, before rolling out backend-api/sync-worker -- see
+# k8s/README.md for the exact sequence. Because RUN_MIGRATIONS_ON_BOOT=false
+# in prod (02-configmap.yaml), nobody else applies the schema, so this must
+# complete successfully before the new image version's pods start.
+#
+# `metadata.name` has a placeholder suffix because Jobs are immutable once
+# created -- give each deploy's Job a unique name (e.g. the image tag/commit
+# sha) so `kubectl apply` doesn't fail on "cannot update" for a field that
+# can't change.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: portal-migrate-<TAG>
+  namespace: vcode-fr-hc
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: "<ECR_BACKEND_REPO_URL>:<TAG>"
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            - configMapRef:
+                name: portal-config
+            - secretRef:
+                name: portal-secrets

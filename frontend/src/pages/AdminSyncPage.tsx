@@ -70,7 +70,8 @@ export default function AdminSyncPage() {
         <div className="mt-4 rounded border border-slate-200 bg-white p-4">
           <h2 className="font-medium">Last run</h2>
           <p className="text-sm text-slate-500">
-            {latestRun.status} · {new Date(latestRun.started_at).toLocaleString()}
+            {latestRun.status} ({latestRun.trigger}) ·{" "}
+            {new Date(latestRun.requested_at).toLocaleString()}
           </p>
           <pre className="mt-2 overflow-x-auto rounded bg-slate-50 p-2 text-xs">
             {JSON.stringify(latestRun.counts_json, null, 2)}
@@ -109,16 +110,18 @@ export default function AdminSyncPage() {
         <table className="mt-2 w-full text-left text-sm">
           <thead className="text-slate-500">
             <tr>
-              <th className="pb-1">Started</th>
+              <th className="pb-1">Requested</th>
               <th className="pb-1">Status</th>
+              <th className="pb-1">Trigger</th>
               <th className="pb-1">Source</th>
             </tr>
           </thead>
           <tbody>
             {runs.data?.map((run) => (
               <tr key={run.id} className="border-t border-slate-100">
-                <td className="py-1">{new Date(run.started_at).toLocaleString()}</td>
+                <td className="py-1">{new Date(run.requested_at).toLocaleString()}</td>
                 <td className="py-1">{run.status}</td>
+                <td className="py-1">{run.trigger}</td>
                 <td className="py-1 font-mono text-xs">{run.source_ref}</td>
               </tr>
             ))}

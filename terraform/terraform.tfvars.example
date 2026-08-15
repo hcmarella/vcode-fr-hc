@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars and fill in for your AWS account before `apply`.
+# Everything here has a default in variables.tf except domain_name /
+# acm_certificate_arn -- the cluster and RDS will provision without them, but
+# the Ingress won't get HTTPS until they're set.
+
+aws_region   = "us-east-1"
+environment  = "prod"
+project_name = "vcode-fr-hc"
+
+domain_name          = "portal.example.com"
+acm_certificate_arn  = "arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"

@@ -31,7 +31,14 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    # transaction_per_migration=True: without it, Alembic wraps an entire
+    # `upgrade head` run (every pending revision) in one transaction, which
+    # breaks any migration using `ALTER TYPE ... ADD VALUE` followed by a
+    # later revision that references the new value -- Postgres refuses to use
+    # an enum value before the transaction that added it commits.
+    context.configure(
+        connection=connection, target_metadata=target_metadata, transaction_per_migration=True
+    )
     with context.begin_transaction():
         context.run_migrations()
 

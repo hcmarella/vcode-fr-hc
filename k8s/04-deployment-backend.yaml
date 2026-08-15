@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: vcode-fr-hc
+spec:
+  replicas: 2 # baseline above 1 from day one -- a single-replica "prod" deployment is a prototype wearing a costume
+  selector:
+    matchLabels:
+      app: backend-api
+  template:
+    metadata:
+      labels:
+        app: backend-api
+    spec:
+      serviceAccountName: backend-api
+      containers:
+        - name: backend-api
+          image: "<ECR_BACKEND_REPO_URL>:<TAG>" # from `terraform output ecr_backend_repository_url`, tag = CI build/commit sha
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: portal-config
+            - secretRef:
+                name: portal-secrets
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: vcode-fr-hc
+spec:
+  selector:
+    app: backend-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-api-pdb
+  namespace: vcode-fr-hc
+spec:
+  minAvailable: 1 # a node drain/AZ rebalance can't take the API to zero replicas
+  selector:
+    matchLabels:
+      app: backend-api

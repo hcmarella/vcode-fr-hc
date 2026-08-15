@@ -14,6 +14,28 @@ class Settings(BaseSettings):
     sync_scratch_dir: str = "/var/lib/vcode-fr-hc/sync-scratch"
     default_source_path: str | None = None
 
+    # --- Push sync (GitHub webhook) ---
+    github_webhook_secret: str = ""
+    # Repo the webhook is allowed to trigger syncs for, as GitHub's
+    # `repository.full_name` (e.g. "hcmarella/vcode-w-hc"). Defense in depth
+    # alongside the HMAC signature check -- the secret proves the request came
+    # from GitHub, this makes sure it's *the right* GitHub repo/branch.
+    sync_allowed_source_repo: str = ""
+    sync_source_url: str = ""
+    sync_source_ref: str = "main"
+
+    # --- Sync queue backend ---
+    # "postgres": worker polls sync_runs via SELECT ... FOR UPDATE SKIP LOCKED.
+    #   No extra infra -- what docker-compose and local dev use.
+    # "sqs": webhook enqueues to SQS, worker long-polls it. What EKS/prod uses
+    #   -- see terraform/sqs.tf. Multiple worker replicas both backends
+    #   support safely; SQS also survives a worker pod dying mid-poll without
+    #   losing the pending job (visibility timeout requeues it).
+    sync_queue_backend: str = "postgres"
+    sync_queue_sqs_url: str | None = None
+    aws_region: str = "us-east-1"
+    sync_worker_poll_interval_seconds: float = 2.0
+
     anthropic_api_key: str = ""
     default_model: str = "claude-sonnet-5"
 

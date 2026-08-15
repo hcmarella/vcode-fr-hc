@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,7 @@ from app.config import get_settings
 from app.db.models.sync import SyncRun, SyncRunFlag
 from app.db.models.user import User
 from app.schemas.sync import SyncRunFlagResponse, SyncRunRequest, SyncRunResponse
-from app.sync_engine.runner import run_sync
+from app.sync_engine.runner import SyncAlreadyInProgress, run_sync
 
 router = APIRouter(prefix="/api/sync", tags=["sync"], dependencies=[Depends(require_admin)])
 
@@ -21,7 +21,16 @@ async def trigger_sync(
     user: User = Depends(require_admin),
 ) -> SyncRun:
     settings = get_settings()
-    return await run_sync(db, body.source, body.ref, Path(settings.sync_scratch_dir), user.id)
+    try:
+        return await run_sync(db, body.source, body.ref, Path(settings.sync_scratch_dir), user.id)
+    except SyncAlreadyInProgress as exc:
+        # A webhook-triggered sync for this same source+ref is already
+        # pending/running -- surface it instead of racing a second one.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"Sync already in progress (run {exc.existing_run.id}, status "
+            f"{exc.existing_run.status.value})",
+        ) from None
 
 
 @router.get("/runs", response_model=list[SyncRunResponse])

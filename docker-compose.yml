@@ -19,9 +19,11 @@ services:
     build:
       context: ./backend
       dockerfile: docker/backend.Dockerfile
+      target: dev
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://portal:portal@postgres:5432/portal
+      SYNC_QUEUE_BACKEND: postgres
     ports:
       - "8000:8000"
     depends_on:
@@ -30,10 +32,34 @@ services:
     volumes:
       - ./backend/app:/app/app
 
+  # Executes queued syncs (webhook-triggered and, defensively, anything left
+  # PENDING by a crashed admin-click request). Same image as `backend`, same
+  # DB -- just a different entrypoint command. Scale independently of the API
+  # with `docker compose up -d --scale worker=3` to test concurrent claiming.
+  worker:
+    build:
+      context: ./backend
+      dockerfile: docker/backend.Dockerfile
+      target: dev
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://portal:portal@postgres:5432/portal
+      SYNC_QUEUE_BACKEND: postgres
+      RUN_MIGRATIONS_ON_BOOT: "false"  # the backend service already runs migrations on boot
+    command: python -m app.workers.sync_worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
   frontend:
     build:
       context: ./frontend
+      target: dev
     command: npm run dev -- --host 0.0.0.0
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
     ports:
       - "5173:5173"
     volumes:

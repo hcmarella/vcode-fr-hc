@@ -1,7 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import about, auth, commands, knowledge, personas, skills, sync
+from app.api import (
+    about,
+    auth,
+    commands,
+    knowledge,
+    personas,
+    skills,
+    sync,
+    sync_status,
+    webhooks,
+)
 
 app = FastAPI(title="vcode-fr-hc portal")
 
@@ -20,6 +30,8 @@ app.include_router(commands.router)
 app.include_router(knowledge.router)
 app.include_router(about.router)
 app.include_router(sync.router)
+app.include_router(sync_status.router)
+app.include_router(webhooks.router)
 
 
 @app.get("/healthz")

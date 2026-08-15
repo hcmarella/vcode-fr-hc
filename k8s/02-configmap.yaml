@@ -1,0 +1,19 @@
+# Non-secret config, shared by backend-api and sync-worker. Secrets (DB
+# credentials, webhook secret, Anthropic key) live in a separate Secret --
+# see 03-secret.example.yaml -- never in this ConfigMap.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portal-config
+  namespace: vcode-fr-hc
+data:
+  RUN_MIGRATIONS_ON_BOOT: "false" # prod runs migrations via the Job in 06-migrate-job.yaml, not on every pod boot
+  SYNC_QUEUE_BACKEND: "sqs"
+  AWS_REGION: "us-east-1"
+  SYNC_ALLOWED_SOURCE_REPO: "hcmarella/vcode-w-hc"
+  SYNC_SOURCE_URL: "https://github.com/hcmarella/vcode-w-hc.git"
+  SYNC_SOURCE_REF: "main"
+  # SYNC_QUEUE_SQS_URL and DATABASE_URL are environment-specific (contain the
+  # RDS endpoint / SQS queue URL from `terraform output`) -- set them in the
+  # Secret alongside actual secrets so there's one source of truth per env,
+  # rather than splitting related config across ConfigMap and Secret.

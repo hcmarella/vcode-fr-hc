@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.db.models.sync import SyncContentType, SyncFlagType, SyncRunStatus
+from app.db.models.sync import SyncContentType, SyncFlagType, SyncRunStatus, SyncTrigger
 
 
 class SyncRunRequest(BaseModel):
@@ -13,9 +13,11 @@ class SyncRunRequest(BaseModel):
 
 class SyncRunResponse(BaseModel):
     id: uuid.UUID
-    started_at: datetime
+    requested_at: datetime
+    started_at: datetime | None
     finished_at: datetime | None
     status: SyncRunStatus
+    trigger: SyncTrigger
     source_ref: str
     source_commit_sha: str | None
     counts_json: dict

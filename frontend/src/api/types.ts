@@ -2,7 +2,8 @@ export type Team = "engineering" | "product" | "qa" | "docs";
 export type Role = "member" | "admin";
 export type ContentStatus = "active" | "stale";
 export type MemoryType = "user" | "feedback" | "project" | "reference";
-export type SyncRunStatus = "running" | "success" | "failed";
+export type SyncRunStatus = "pending" | "running" | "success" | "failed";
+export type SyncTrigger = "manual" | "webhook";
 export type SyncFlagType = "team_mismatch" | "parse_error" | "other";
 export type SyncContentType = "agent" | "skill" | "command" | "knowledge" | "about";
 
@@ -65,9 +66,11 @@ export interface AboutResponse {
 
 export interface SyncRunResponse {
   id: string;
-  started_at: string;
+  requested_at: string;
+  started_at: string | null;
   finished_at: string | null;
   status: SyncRunStatus;
+  trigger: SyncTrigger;
   source_ref: string;
   source_commit_sha: string | null;
   counts_json: Record<string, Record<string, number>>;
