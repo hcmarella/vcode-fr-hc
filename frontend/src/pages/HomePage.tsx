@@ -8,6 +8,7 @@ import MyWorkPanel from "../components/dashboard/MyWorkPanel";
 import NeedsAttentionPanel from "../components/dashboard/NeedsAttentionPanel";
 import SyncStatusBadge from "../components/dashboard/SyncStatusBadge";
 import StatTile from "../components/dashboard/StatTile";
+import ValueDeliveredPanel from "../components/dashboard/ValueDeliveredPanel";
 import Badge from "../components/ui/Badge";
 import { useCurrentUser } from "../hooks/useAuth";
 
@@ -88,8 +89,9 @@ export default function HomePage() {
 
       <div
         className="mt-6 grid animate-fade-in-up gap-4 opacity-0 sm:grid-cols-2"
-        style={{ animationDelay: "300ms" }}
+        style={{ animationDelay: "260ms" }}
       >
+        <ValueDeliveredPanel />
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-medium text-slate-900">Content mix</h2>
           {contentLoaded ? (
@@ -98,13 +100,13 @@ export default function HomePage() {
             <div className="mt-3 h-[180px] animate-pulse rounded bg-slate-50" />
           )}
         </div>
-        <MyWorkPanel />
       </div>
 
       <div
         className="mt-4 grid animate-fade-in-up gap-4 opacity-0 sm:grid-cols-2"
-        style={{ animationDelay: "375ms" }}
+        style={{ animationDelay: "300ms" }}
       >
+        <MyWorkPanel />
         {isTechnical ? (
           <NeedsAttentionPanel
             personas={personas.data}
@@ -115,6 +117,12 @@ export default function HomePage() {
         ) : (
           <KnowledgeSpotlightPanel knowledge={knowledge.data} />
         )}
+      </div>
+
+      <div
+        className="mt-4 animate-fade-in-up opacity-0"
+        style={{ animationDelay: "375ms" }}
+      >
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-medium text-slate-900">Available skills</h2>
           <ul className="mt-3 space-y-2">

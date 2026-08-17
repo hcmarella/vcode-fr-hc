@@ -28,7 +28,13 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/about", label: "About", icon: "ℹ️" },
     ],
   },
-  { label: "Integrations", items: [{ to: "/jira", label: "Jira", icon: "🎫" }] },
+  {
+    label: "Integrations",
+    items: [
+      { to: "/jira", label: "Jira", icon: "🎫" },
+      { to: "/reports", label: "Reports", icon: "📊" },
+    ],
+  },
   { label: "Team", items: [{ to: "/sessions", label: "Sessions", icon: "💬" }] },
 ];
 
@@ -40,6 +46,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/commands": "Commands",
   "/knowledge": "Knowledge",
   "/jira": "Jira",
+  "/reports": "Reports",
   "/sessions": "Sessions",
   "/admin/sync": "Sync administration",
 };

@@ -6,10 +6,12 @@ from app.api import (
     auth,
     chat,
     commands,
+    github_stats,
     images,
     jira_actions,
     knowledge,
     personas,
+    roi_stats,
     skills,
     sync,
     sync_status,
@@ -37,6 +39,8 @@ app.include_router(sync_status.router)
 app.include_router(chat.router)
 app.include_router(images.router)
 app.include_router(jira_actions.router)
+app.include_router(github_stats.router)
+app.include_router(roi_stats.router)
 app.include_router(webhooks.router)
 
 

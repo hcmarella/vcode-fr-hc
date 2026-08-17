@@ -1,5 +1,6 @@
 import uuid
 
+import anthropic
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,6 +42,12 @@ async def chat(
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, "Chat isn't configured (missing API key)"
         ) from None
+    except anthropic.APIStatusError as exc:
+        # Surfaces Claude API failures (low credit balance, rate limit, auth,
+        # upstream outage) as a clean message instead of a raw 500 -- same
+        # 502 pattern used for Jira/GitHub upstream failures elsewhere in
+        # this API. exc.message is Anthropic's own human-readable string.
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Chat request failed: {exc.message}") from None
     return ChatResponse(
         reply=reply,
         proposed_actions=[

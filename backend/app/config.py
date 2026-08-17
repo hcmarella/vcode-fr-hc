@@ -51,6 +51,30 @@ class Settings(BaseSettings):
     jira_api_token: str = ""
     jira_default_project_key: str = ""
 
+    # --- GitHub PR stats (Reports page) ---
+    # Personal access token, classic or fine-grained with "Pull requests: Read"
+    # -- create at github.com/settings/tokens. Optional for public repos (the
+    # unauthenticated rate limit is just low, 60 req/hr per source IP); required
+    # for any private repo in github_stats_repos.
+    github_token: str = ""
+    # Comma-separated "owner/repo" list to report on, e.g.
+    # "hcmarella/vcode-fr-hc,hcmarella/vcode-w-hc". Fixed server-side allowlist
+    # rather than a client-supplied repo -- keeps the endpoint from being used
+    # to proxy arbitrary GitHub API reads through this server's credentials.
+    github_stats_repos: str = "hcmarella/vcode-fr-hc,hcmarella/vcode-w-hc"
+    # Adds a handful of clearly-flagged fabricated PRs/contributors on top of
+    # the real GitHub data -- for demoing the Reports page before the real
+    # repos have enough history to look like a busy team. Every synthetic
+    # entry carries "synthetic": true in the API response so the frontend can
+    # badge it; never enable in a real deployment.
+    github_stats_demo_mode: bool = False
+
+    # --- ROI panel (Home dashboard) ---
+    # Blended fully-loaded hourly cost used to turn estimated time saved into
+    # a dollar figure. Adjust to your team's actual rate -- the panel labels
+    # this as an assumption, not a measured cost.
+    roi_hourly_rate_usd: float = 75.0
+
     docker_host: str | None = None
     sandbox_image: str = "vcode-fr-hc-sandbox:latest"
     sandbox_egress_network: str = "sandbox-egress"

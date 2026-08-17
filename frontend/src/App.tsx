@@ -14,6 +14,7 @@ import LoginPage from "./pages/LoginPage";
 import NewSessionPage from "./pages/NewSessionPage";
 import PersonaDetailPage from "./pages/PersonaDetailPage";
 import PersonasPage from "./pages/PersonasPage";
+import ReportsPage from "./pages/ReportsPage";
 import SessionChatPage from "./pages/SessionChatPage";
 import SessionsListPage from "./pages/SessionsListPage";
 import SignupPage from "./pages/SignupPage";
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/knowledge" element={<KnowledgePage />} />
           <Route path="/knowledge/:id" element={<KnowledgeDetailPage />} />
           <Route path="/jira" element={<JiraPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
           <Route path="/admin/sync" element={<AdminSyncPage />} />
           <Route path="/sessions" element={<SessionsListPage />} />
           <Route path="/sessions/new" element={<NewSessionPage />} />
